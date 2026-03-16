@@ -30,6 +30,11 @@
         <span>PDF</span>
         <span class="nav-count" id="count-pdf">0</span>
       </div>
+
+      <div class="nav-item" data-filter="image" onclick="setFilter('image', this)">
+        <span>Images</span>
+        <span class="nav-count" id="count-image">0</span>
+      </div>
     </aside>
 
     <main class="main">
@@ -38,6 +43,7 @@
           <option value="article" selected>Article</option>
           <option value="youtube">YouTube Video</option>
           <option value="pdf">PDF</option>
+          <option value="image">Image</option>
         </select>
 
         <input
@@ -47,6 +53,10 @@
         />
 
         <button type="button" onclick="addItem()">+ Add</button>
+
+        <input id="fileUpload" type="file" />
+
+        <button type="button" onclick="uploadFile()">Upload</button>
       </div>
 
       <div id="grid" class="grid"></div>

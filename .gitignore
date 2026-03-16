@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# Database
+data/*.db
+
+# Uploads
+data/uploads/
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,185 +1,264 @@
 let allItems = [];
 let currentFilter = "all";
 
+const API = "http://127.0.0.1:8000";
+
+function detectItemType(url) {
+
+  const lowerUrl = (url || "").toLowerCase().trim();
+
+  if (
+    lowerUrl.endsWith(".jpg") ||
+    lowerUrl.endsWith(".jpeg") ||
+    lowerUrl.endsWith(".png") ||
+    lowerUrl.endsWith(".webp") ||
+    lowerUrl.endsWith(".gif")
+  ) {
+    return "image";
+  }
+
+  if (lowerUrl.endsWith(".pdf")) {
+    return "pdf";
+  }
+
+  if (
+    lowerUrl.includes("youtube.com/watch") ||
+    lowerUrl.includes("youtu.be/")
+  ) {
+    return "youtube";
+  }
+
+  return "article";
+}
+
+function escapeHtml(value) {
+
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 async function load() {
+
   const grid = document.getElementById("grid");
-  grid.innerHTML = "<div style='padding:20px;'>Loading items...</div>";
+
+  if (!grid) return;
+
+  grid.innerHTML = "Loading...";
 
   try {
-    const res = await fetch("/api/items");
 
-    if (!res.ok) {
-      throw new Error(`API returned ${res.status}`);
-    }
+    const res = await fetch(`${API}/items`);
+
+    if (!res.ok) throw new Error("Backend error");
 
     const data = await res.json();
 
-    if (!Array.isArray(data)) {
-      throw new Error("API response is not an array");
-    }
-
     allItems = data;
+
     updateSidebarCounts();
     renderItems();
+
   } catch (err) {
-    console.error("Failed to load items:", err);
-    grid.innerHTML = `
-      <div style="padding:20px;color:red;">
-        Could not load items from backend.
-      </div>
-    `;
+
+    console.error(err);
+
+    grid.innerHTML = "Could not load backend.";
+
   }
 }
 
 function updateSidebarCounts() {
+
   const counts = {
     all: allItems.length,
     article: 0,
     youtube: 0,
-    pdf: 0
+    pdf: 0,
+    image: 0
   };
 
-  allItems.forEach((item) => {
-    const type = (item.item_type || "article").toLowerCase();
-    if (counts[type] !== undefined) {
-      counts[type]++;
-    }
+  allItems.forEach(item => {
+
+    const type = (item?.item_type || "article").toLowerCase();
+
+    if (counts[type] !== undefined) counts[type]++;
+
   });
 
-  const allEl = document.getElementById("count-all");
-  const articleEl = document.getElementById("count-article");
-  const youtubeEl = document.getElementById("count-youtube");
-  const pdfEl = document.getElementById("count-pdf");
-
-  if (allEl) allEl.textContent = counts.all;
-  if (articleEl) articleEl.textContent = counts.article;
-  if (youtubeEl) youtubeEl.textContent = counts.youtube;
-  if (pdfEl) pdfEl.textContent = counts.pdf;
+  document.getElementById("count-all").textContent = counts.all;
+  document.getElementById("count-article").textContent = counts.article;
+  document.getElementById("count-youtube").textContent = counts.youtube;
+  document.getElementById("count-pdf").textContent = counts.pdf;
+  document.getElementById("count-image").textContent = counts.image;
 }
 
 function renderItems() {
+
   const grid = document.getElementById("grid");
 
-  let filteredItems = allItems;
+  if (!grid) return;
+
+  let filtered = allItems;
 
   if (currentFilter !== "all") {
-    filteredItems = allItems.filter(
-      (item) => (item.item_type || "article") === currentFilter
+
+    filtered = allItems.filter(item =>
+      (item?.item_type || "article") === currentFilter
     );
+
   }
 
-  if (!filteredItems.length) {
-    grid.innerHTML = `
-      <div style="padding:20px;color:#666;">
-        No items found for this filter.
-      </div>
-    `;
+  if (!filtered.length) {
+
+    grid.innerHTML = "No items.";
+
     return;
   }
 
   grid.innerHTML = "";
 
-  filteredItems.forEach((item) => {
+  filtered.forEach(item => {
+
     let hostname = "";
+
     try {
-      hostname = item.url ? new URL(item.url).hostname : "";
-    } catch (e) {
-      hostname = item.url || "";
+
+      if (item.url.startsWith("/uploads")) {
+        hostname = "local upload";
+      } else {
+        hostname = new URL(item.url).hostname;
+      }
+
+    } catch {
+      hostname = "";
     }
+
+    const type = (item?.item_type || "article").toUpperCase();
 
     const card = document.createElement("div");
     card.className = "card";
 
-    const type = (item.item_type || "article").toLowerCase();
-    const typeLabel = type.toUpperCase();
+    let thumb = `<div class="thumb"></div>`;
 
-    let thumbContent = "";
-    if (type === "pdf") {
-      thumbContent = `<div class="thumb thumb-pdf">PDF</div>`;
-    } else {
-      const imageStyle = item.image
-        ? `background-image:url('${item.image}');`
-        : "background:#ececf3;";
-      thumbContent = `<div class="thumb" style="${imageStyle}"></div>`;
+    if (item.image) {
+      thumb = `<div class="thumb" style="background-image:url('${item.image}')"></div>`;
+    }
+
+    if (type === "PDF") {
+      thumb = `<div class="thumb thumb-pdf">PDF</div>`;
     }
 
     card.innerHTML = `
-      ${thumbContent}
+      ${thumb}
       <div class="card-body">
+
         <div class="card-meta">
-          <div class="domain">${hostname}</div>
-          <div class="type-badge">${typeLabel}</div>
+          <div class="domain">${escapeHtml(hostname)}</div>
+          <div class="type-badge">${type}</div>
         </div>
-        <h3 class="card-title">${item.title || "Untitled"}</h3>
-        <p class="card-desc">${item.description || ""}</p>
+
+        <h3 class="card-title">${escapeHtml(item.title)}</h3>
+
+        <p class="card-desc">${escapeHtml(item.description)}</p>
+
       </div>
     `;
 
-    card.addEventListener("click", () => {
-      if (item.url) {
-        window.open(item.url, "_blank");
-      }
-    });
+    card.onclick = () => window.open(item.url, "_blank");
 
     grid.appendChild(card);
+
   });
+
 }
 
-function setFilter(filter, element) {
+function setFilter(filter, el) {
+
   currentFilter = filter;
 
-  document.querySelectorAll(".nav-item").forEach((item) => {
-    item.classList.remove("active");
-  });
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
 
-  if (element) {
-    element.classList.add("active");
-  }
+  if (el) el.classList.add("active");
 
   renderItems();
 }
 
 async function addItem() {
+
   const input = document.getElementById("urlInput");
   const typeSelect = document.getElementById("itemType");
 
   const url = input.value.trim();
-  let itemType = typeSelect.value;
 
   if (!url) return;
 
-  // simple auto-fix for pasted PDF links
-  if (url.toLowerCase().endsWith(".pdf")) {
-    itemType = "pdf";
-    typeSelect.value = "pdf";
-  }
+  let itemType = detectItemType(url);
+
+  typeSelect.value = itemType;
 
   try {
+
     const res = await fetch(
-      `/api/add?url=${encodeURIComponent(url)}&item_type=${encodeURIComponent(itemType)}`
+      `${API}/add?url=${encodeURIComponent(url)}&item_type=${itemType}`
     );
 
-    if (!res.ok) {
-      throw new Error(`Add failed with status ${res.status}`);
-    }
+    if (!res.ok) throw new Error("Add failed");
 
     input.value = "";
-    typeSelect.value = "article";
 
     await load();
+
   } catch (err) {
-    console.error("Failed to add item:", err);
-    alert("Could not add the URL. Check browser console.");
+
+    console.error(err);
+
+  }
+}
+
+async function uploadFile() {
+
+  const input = document.getElementById("fileUpload");
+
+  if (!input.files.length) return;
+
+  const file = input.files[0];
+
+  const form = new FormData();
+
+  form.append("file", file);
+
+  try {
+
+    const res = await fetch(`${API}/upload`, {
+      method: "POST",
+      body: form
+    });
+
+    if (!res.ok) throw new Error("Upload failed");
+
+    input.value = "";
+
+    await load();
+
+  } catch (err) {
+
+    console.error(err);
+
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  load();
 
   const input = document.getElementById("urlInput");
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      addItem();
-    }
+
+  load();
+
+  input.addEventListener("keydown", e => {
+
+    if (e.key === "Enter") addItem();
+
   });
+
 });
