@@ -1,0 +1,38 @@
+/*
+==============================
+THE GRID DESIGN SETTINGS
+Michel can edit everything here
+==============================
+*/
+
+:root {
+
+--accent:#7c3aed;
+--accent-light:#a78bfa;
+
+--bg:#ffffff;
+--bg-secondary:#f6f6f8;
+
+--card-bg:#ffffff;
+
+--card-width:260px;
+--card-radius:14px;
+
+--shadow:0 6px 16px rgba(0,0,0,0.08);
+
+--text:#111;
+--muted:#777;
+}
+
+/* DARK MODE */
+
+[data-theme="dark"]{
+
+--bg:#111116;
+--bg-secondary:#1a1a22;
+
+--card-bg:#1f1f2a;
+
+--text:#eaeaea;
+--muted:#9a9aa5;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Grid</title>
+  <link rel="stylesheet" href="theme.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo">The Grid</div>
+
+      <div class="nav-item active" data-filter="all" onclick="setFilter('all', this)">
+        <span>All Items</span>
+        <span class="nav-count" id="count-all">0</span>
+      </div>
+
+      <div class="nav-item" data-filter="article" onclick="setFilter('article', this)">
+        <span>Articles</span>
+        <span class="nav-count" id="count-article">0</span>
+      </div>
+
+      <div class="nav-item" data-filter="youtube" onclick="setFilter('youtube', this)">
+        <span>Videos</span>
+        <span class="nav-count" id="count-youtube">0</span>
+      </div>
+
+      <div class="nav-item" data-filter="pdf" onclick="setFilter('pdf', this)">
+        <span>PDF</span>
+        <span class="nav-count" id="count-pdf">0</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <select id="itemType">
+          <option value="article" selected>Article</option>
+          <option value="youtube">YouTube Video</option>
+          <option value="pdf">PDF</option>
+        </select>
+
+        <input
+          id="urlInput"
+          type="text"
+          placeholder="Paste URL to save..."
+        />
+
+        <button type="button" onclick="addItem()">+ Add</button>
+      </div>
+
+      <div id="grid" class="grid"></div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
