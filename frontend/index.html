@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Grid</title>
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
   <div class="layout">
@@ -35,15 +36,36 @@
         <span>Images</span>
         <span class="nav-count" id="count-image">0</span>
       </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-header">
+          <span>Collections</span>
+          <button class="btn-add-small" onclick="addCollection()">+</button>
+        </div>
+        <div id="collectionsList"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-header">
+          <span>Tags</span>
+          <button class="btn-add-small" onclick="addTag()">+</button>
+        </div>
+        <div id="tagsList" class="tags-list"></div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-settings" id="toggleEdit" onclick="toggleEditMode()" title="Toggle Edit Mode">⚙️</button>
+      </div>
     </aside>
 
     <main class="main">
       <div class="topbar">
-        <select id="itemType">
+        <select id="itemType" onchange="handleTypeChange()">
           <option value="article" selected>Article</option>
           <option value="youtube">YouTube Video</option>
           <option value="pdf">PDF</option>
           <option value="image">Image</option>
+          <option value="upload">📁 Upload File...</option>
         </select>
 
         <input
@@ -52,15 +74,64 @@
           placeholder="Paste URL to save..."
         />
 
-        <button type="button" onclick="addItem()">+ Add</button>
+        <button id="addBtn" type="button" onclick="addItem()">+ Add</button>
 
-        <input id="fileUpload" type="file" />
-
-        <button type="button" onclick="uploadFile()">Upload</button>
+        <!-- Hidden file input triggered by dropdown -->
+        <input id="fileUpload" type="file" style="display: none;" onchange="uploadFile()" />
       </div>
 
       <div id="grid" class="grid"></div>
     </main>
+  </div>
+
+  <div id="readerOverlay" class="reader-overlay">
+    <div class="reader-content">
+      <div class="reader-header">
+        <div class="reader-controls">
+          <button class="btn-reader-close" onclick="closeReader()">← Back</button>
+          <a id="readerOriginalLink" href="#" target="_blank">Open Original</a>
+        </div>
+        <h1 id="readerTitle"></h1>
+      </div>
+      <div id="readerBody" class="reader-body"></div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-nav prev" onclick="event.stopPropagation(); prevImage()">‹</button>
+    <img id="lightboxImg" src="" alt="Full Frame" />
+    <button class="lightbox-nav next" onclick="event.stopPropagation(); nextImage()">›</button>
+  </div>
+
+  <!-- Edit Collection/Tag Modal -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 id="editModalTitle">Edit Property</h3>
+      <input type="hidden" id="editModalId" />
+      <input type="hidden" id="editModalType" />
+
+      <div class="form-group">
+        <label for="editModalName">Name:</label>
+        <input type="text" id="editModalName" />
+      </div>
+
+      <div class="form-group">
+        <label for="editModalColor">Color:</label>
+        <input type="color" id="editModalColor" />
+      </div>
+
+      <div class="form-group">
+        <label for="editModalIcon">Icon (Font Awesome class):</label>
+        <input type="text" id="editModalIcon" placeholder="e.g. fas fa-heart" />
+        <input type="text" id="iconSearchInput" placeholder="Search icons..." oninput="filterIcons()" style="margin-top: 5px;" />
+        <div id="iconSearchResults" class="icon-search-results"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="editModalSave" onclick="saveEditModal()">Save</button>
+        <button id="editModalCancel" onclick="closeEditModal()">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
